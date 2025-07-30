@@ -1,4 +1,4 @@
-# 🧠 RISC-V-Based MYTH Workshop
+#  RISC-V-Based MYTH Workshop
 
 This repository documents my hands-on learning journey through the [RISC-V MYTH Workshop](https://www.vlsisystemdesign.com/myth/), conducted by **VLSI System Design (VSD)** and **Redwood EDA**. Over five  days, I learned to build a pipelined RISC-V CPU, starting from C programming and ending with RTL simulation using TL-Verilog. 
 
@@ -16,7 +16,7 @@ This workshop provided hands-on exposure to:
 
 ---
 
-## 📖 RISC-V Instruction Set Architecture (ISA)
+##  RISC-V Instruction Set Architecture (ISA)
 
 ### 2.1 Overview of RISC-V ISA
 
@@ -49,7 +49,7 @@ These pseudo-instructions simplify programming and let you focus more on logic t
 
 ## 📅 Day-Wise Lab Progress
 
-### 🟢 Day 1 
+### Day 1 
 
 #### 1 C Program: Sum of First N Natural Numbers
 
@@ -118,7 +118,7 @@ Useful commands:
 
 ---
 
-### 🔵 Day 2
+### Day 2
 
 * Learned TL-Verilog syntax and Makerchip usage
 * Wrote basic arithmetic operations using pipeline stages like `@1`
@@ -140,7 +140,7 @@ Useful commands:
 ---
 
 
-### 🟠 Day 3 
+### Day 3 
 
 * Learned to design IF stage with PC and memory
 * Learned to create ID stage: opcode parsing, instruction type detection, control signals
@@ -163,7 +163,64 @@ Useful commands:
 
 ---
 
-### 🔴 Day 4 
+### Day 4 
+
+Day 4 focused on building the essential compute and control path of the RISC-V processor using TL-Verilog. The key components implemented included the **ALU**, **register file connectivity**, and **branching logic**.
+
+####  Implemented 
+
+* **Instruction Decode Logic**
+
+  * Extracted fields: `opcode`, `funct3`, `funct7`, `rs1`, `rs2`, `rd`
+  * Differentiated between instruction types: R-type, I-type, B-type, etc.
+
+* **Immediate Generation**
+
+  * Parsed immediate values based on format:
+
+    * I-type → sign-extended bits \[31:20]
+    * B-type → concatenation and extension of bits \[31], \[7], \[30:25], \[11:8]
+
+* **Register File**
+
+  * Read values from `rs1` and `rs2`
+  * Write-back to `rd` (except x0)
+  * Ensured writes occurred only on valid instructions
+
+* **ALU**
+
+  * Performed operations based on instruction type:
+
+    ```tlv
+    $result = $is_addi ? $src1 + $imm :
+              $is_add  ? $src1 + $src2 :
+              $is_sub  ? $src1 - $src2 : 32'bx;
+    ```
+
+* **Branch Logic**
+
+  * Implemented comparison checks:
+    * `beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu`
+  * Controlled PC update with branching:
+
+    ```tlv
+    $pc = $taken_br ? $pc + $imm : $pc + 4;
+    ```
+
+#### Simulation Outcomes
+* Verified register updates and ALU operations
+* Observed correct branching behavior
+* All instructions fetched, decoded, and executed successfully
+  
+#### Instructions Handled
+| Type | Instructions Covered                       |
+| ---- | ------------------------------------------ |
+| R    | `add`, `sub`                               |
+| I    | `addi`                                     |
+| B    | `beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu` |
+
+---
+Let me know if you'd like this version adapted further or formatted into your working README.
 
 * Implemented ALU operations: add, sub, addi
 * Built branch logic: beq, bne, etc.
@@ -179,7 +236,7 @@ Useful commands:
 
 ---
 
-### 🟣 Day 5 
+###  Day 5 
 
 * Integrated IF → ID → EX → MEM → WB
 * Built register file and writeback logic
