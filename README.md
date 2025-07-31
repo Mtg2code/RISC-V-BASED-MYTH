@@ -1,8 +1,8 @@
 #  RISC-V-Based MYTH Workshop
 
-This repository documents my hands-on learning journey through the [RISC-V MYTH Workshop](https://www.vlsisystemdesign.com/myth/), conducted by **VLSI System Design (VSD)** and **Redwood EDA**. Over five  days, I learned to build a pipelined RISC-V CPU, starting from C programming and ending with RTL simulation using TL-Verilog. 
+This repository documents my hands-on learning journey through the [RISC-V MYTH Workshop](https://www.vlsisystemdesign.com/myth/), conducted by **VLSI System Design (VSD)** and **Redwood EDA**. I learned to build a pipelined RISC-V CPU, starting from C programming and ending with RTL simulation using TL-Verilog on the MakerChip IDE. 
 
-## 📌 Introduction
+##  Introduction
 
 The RISC-V MYTH Workshop was a deep dive into microprocessor architecture and implementation. I started by writing basic C programs and simulating them with the RISC-V Spike simulator. Then, I gradually transitioned to understanding number systems and RISC-V assembly. Eventually, I moved into RTL hardware design using TL-Verilog on the Makerchip platform, where I constructed a complete pipelined CPU from the ground up.
 
@@ -47,7 +47,7 @@ These pseudo-instructions simplify programming and let you focus more on logic t
 
 ---
 
-## 📅 Day-Wise Lab Progress
+## Lab 
 
 ### Day 1 
 
@@ -142,8 +142,70 @@ Useful commands:
 
 ### Day 3 
 
-* Learned to design IF stage with PC and memory
-* Learned to create ID stage: opcode parsing, instruction type detection, control signals
+## 3.1. Introduction to TL-Verilog
+
+This day marked the transition from RISC-V ISA to hardware design, using **TL-Verilog** on the **Makerchip IDE**. The focus was on building up from basic logic to pipelined systems, all within a timing-abstract modeling framework.
+
+## 3.2. Combinational and Sequential Logic
+
+- Implemented basic combinational modules like **multiplexers** and **calculators**.
+- Explored signal assignment using conditional (`? :`) and arithmetic operations.
+- Introduced **clocked behavior** using pipeline references (`>>1`, `>>2`).
+- Built sequential designs including:
+  - **Free-running counter**
+  - **Fibonacci series generator**
+
+```verilog
+$cnt[7:0] = $reset ? 0 : >>1$cnt + 1;
+```
+
+## 3.3. Pipelining and Retiming
+
+- Introduced **pipeline stages** using `@` notation.
+- Designed pipelined logic for **Pythagorean Theorem** calculation.
+- Demonstrated pipeline **retiming** to optimize latency and throughput.
+
+```verilog
+@1
+  $aa_sq = $aa * $aa;
+  $bb_sq = $bb * $bb;
+@2
+  $cc_sq = $aa_sq + $bb_sq;
+@3
+  $cc = sqrt($cc_sq);
+```
+
+## 3.4. Error Propagation and Valid Signals
+
+- Modeled error conditions across stages using staged OR logic.
+- Applied `$valid` signals to gate operations, preserving data integrity.
+
+```verilog
+@1 $err1 = $bad_input || $illegal_op;
+@3 $err2 = $err1 || $overflow;
+@6 $err3 = $err2 || $div_by_zero;
+```
+
+## 3.5. Accumulator with Reset and Validity
+
+- Designed a conditional accumulator responsive to `$reset` and `$valid`.
+- Used it to accumulate pipeline outputs (e.g., distance metrics).
+
+```verilog
+@4
+  $tot_dist[63:0] = $reset ? '0 :
+                    $valid ? >>1$tot_dist + $cc :
+                             >>1$tot_dist;
+```
+
+## 3.6. Key Concepts Explored
+
+- TL-Verilog structural rules and naming conventions.
+- Signal staging, timing abstraction, and re-entrant lexical structure.
+- Clear understanding of **hardware design abstraction** and **RTL pipelining**.
+
+> Day 3 bridged the gap between high-level concepts and RTL design, making the leap into pipelined logic design more intuitive using TL-Verilog's expressive timing model.
+
 
 **Concepts:**
 
@@ -166,6 +228,9 @@ Useful commands:
 ### Day 4 
 
 Day 4 focused on building the essential compute and control path of the RISC-V processor using TL-Verilog. The key components implemented included the **ALU**, **register file connectivity**, and **branching logic**.
+<img width="1190" height="673" alt="Day4BlockDiag" src="https://github.com/user-attachments/assets/ab95ffe8-c1e4-4fe9-b885-ef45f3b2fb16" />
+
+
 
 ####  Implemented 
 
@@ -234,21 +299,42 @@ Let me know if you'd like this version adapted further or formatted into your wo
       $pc = $pc + $imm;
 ```
 
+**Day 4 Combined Labs Result**
+<img width="2492" height="1432" alt="image" src="https://github.com/user-attachments/assets/e06ae83c-9d43-4efb-9762-61beec4c1708" />
+
+
+
 ---
 
 ###  Day 5 
 
-* Integrated IF → ID → EX → MEM → WB
-* Built register file and writeback logic
-* Simulated and verified the full pipeline
+The final stage of the workshop focused on transforming the previously built single-cycle RISC-V CPU into a pipelined architecture. The aim was to improve throughput by overlapping instruction execution stages, following the standard five-stage pipeline: **Fetch**, **Decode**, **Execute**, **Memory Access**, and **Write Back**.
 
-**Register File Example:**
+### Pipeline Structure and Hazards
 
-```tlv
-@5
-   ?$rd_we
-      $rf[$rd] = $alu_result;
-```
+- Modified the register file interface from `m4+rf(@1,@1)` to `m4+rf(@2,@3)` to implement stage separation.
+- Added `VALID_SIGNAL` logic to synchronize instruction flow and prevent unintended operations across stages.
+- Identified and accounted for key pipeline hazards:
+  - **Data Hazards** – RAW, WAR, WAW scenarios
+  - **Control Hazards** – arising from branch instructions
+  - **Structural Hazards** – caused by resource contention
+- Managed hazards using stalls and bubble insertion where appropriate.
+
+### Memory Access and Control Transfer
+- Enabled memory support by uncommenting `m4+dmem(@4)`.
+- Added valid signal logic to manage load and store operations reliably within the pipeline.
+- Implemented jump and branch instructions (`jal`, `jalr`) to enable control flow transitions during pipelined execution.
+
+### Final Integration: Five-Stage Pipelined CPU
+
+- Integrated all components into a fully functional five-stage pipelined RISC-V processor.
+- Verified behavior using Makerchip simulation, observing:
+  - Instruction propagation across pipeline stages
+  - Correct handling of control flow and data access
+  - Hazard detection and resolution mechanisms
+
+**Day 5 Lab**
+<img width="2492" height="1432" alt="image" src="https://github.com/user-attachments/assets/c9b68eaf-b99d-446e-9250-4698f62bc7d7" />
 
 ---
 
@@ -256,7 +342,7 @@ Let me know if you'd like this version adapted further or formatted into your wo
 
 ---
 
-## 🔧 Tools and Platforms Used
+## Simplification and Usage of tools
 
 | Tool                        | Purpose                           |
 | --------------------------- | --------------------------------- |
@@ -270,7 +356,7 @@ Let me know if you'd like this version adapted further or formatted into your wo
 
 ---
 
-## 💡 Technical Insights
+## Points to Rememember
 
 * 32 general-purpose 64-bit registers in RV64I
 * Register `x0` is always 0
@@ -290,5 +376,3 @@ Special thanks to:
 for designing and mentoring this workshop. All open-source resources and lab materials are available on GitHub.
 
 ---
-
-Happy learning!
