@@ -342,7 +342,7 @@ The final stage of the workshop focused on transforming the previously built sin
 
 ---
 
-## Simplification and Usage of tools
+## Tools and Purpose to Understand Basics
 
 | Tool                        | Purpose                           |
 | --------------------------- | --------------------------------- |
